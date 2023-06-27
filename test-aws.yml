@@ -1,0 +1,32 @@
+---
+- hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Create Key Pair
+      ec2_key:
+        name: sample
+        region: us-east-1
+      register: keyout
+
+    - name: Print Key
+      debug:
+        var: keyout
+
+    - name: Save private key content
+      copy:
+        content: "{{ keyout.key.private_key }}"
+        dest: ./sample-key.pem
+      when: keyout.changed
+
+    - name: Launch EC2 Instance
+      ec2_instance:
+        wait: yes
+        key_name: sample
+        instance_type: t2.micro
+        image:
+          id: ami-022e1a32d3f742bd8
+        region: us-east-1
+        tags:
+          Name: vpro-web01
+          project: vprofile
+
